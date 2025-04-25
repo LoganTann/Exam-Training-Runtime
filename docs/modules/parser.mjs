@@ -11,7 +11,8 @@ export function parseFileContent(template) {
             if (currentQuestion) {
                 questions.push(currentQuestion.toObject);
             }
-            currentQuestion = new QuestionBuilder();
+            currentQuestion = new QuestionBuilder(line.substring(2));
+            continue;
         }
         if (!currentQuestion) {
             header.push(line.trim());
@@ -24,7 +25,7 @@ export function parseFileContent(template) {
         } else if (line.startsWith(">>")) {
             currentQuestion.addComment(line.substring(2));
         } else if (line.startsWith("\\")) {
-            currentQuestion.addComment(line.substring(1));
+            currentQuestion.putNewLine(line.substring(1));
         } else {
             currentQuestion.putNewLine(line);
         }
@@ -45,22 +46,39 @@ const modes = {
     comment: 3,
 };
 
-class QuestionBuilder {
+/**
+ * @typedef {{
+ *  question: string,
+ *  options: string[],
+ *  comments: string[],
+ *  correctAnswers: number[]
+ *  type: "single" | "multiple"
+ * }} CompiledQuestion
+ */
+
+export class QuestionBuilder {
     question = "";
+    /** @type {string[]} */
     options = [];
+    /** @type {string[]} */
     comments = [];
+    /** @type {number[]} */
     correctAnswers = [];
     get type() {
         return this.correctAnswers.length > 1 ? "multiple" : "single";
     }
     get toObject() {
-        return {
-            question: this.question.trim(),
-            options: this.options.map(toMarkdown),
-            comments: this.comments.map(toMarkdown),
-            correctAnswers: this.correctAnswers.map(toMarkdown),
+        return /** @type {CompiledQuestion} */{
+            question: toHtml(this.question),
+            options: this.options.map(toHtml),
+            comments: this.comments.map(toHtml),
+            correctAnswers: this.correctAnswers,
             type: this.type,
         };
+    }
+
+    constructor(line) {
+        this.question = line;
     }
 
     _mode = modes.question;
@@ -91,22 +109,11 @@ class QuestionBuilder {
     }
 }
 
-function toMarkdown(text) {
-    return marked.parse(text.trim().replace(/\n/g, "  \\n"));
-}
-
-function unused_parseFrontMatter(fileContent) {
-    const match = fileContent.match(/\s*---\s*([\s\S]*?)\s*---\s*(.*)/);
-    if (!match) {
-        return { metadata: {}, content: template };
-    }
-    const [metaString, content] = match;
-    const metadata = {};
-    for (const line of metaString.split("\n")) {
-        const [key, value] = line.split(":").map((part) => part.trim());
-        if (key && value) {
-            metadata[key] = value;
-        }
-    }
-    return [metadata, content];
+/**
+ * Trims the block, adds two spaces after every new lines, and converts MD to HTML.
+ * @param {string} text 
+ * @returns {string}
+ */
+function toHtml(text) {
+    return marked.parseInline(text.trim().replace(/\n/g, "  \n"));
 }

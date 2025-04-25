@@ -1,0 +1,133 @@
+/* ========== BASIC STYLES ========== */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+section {
+    display: none;
+}
+[data-section="launcher"] #launcher,
+[data-section="quiz-layout"] #quiz-layout,
+[data-section="score-container"] #score-container {
+    display: block;
+}
+
+header,
+.quiz-container,
+footer {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+button {
+    cursor: pointer;
+    padding: 8px 16px;
+    margin: 6px 0;
+}
+
+.question {
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.options {
+    margin: 10px 0;
+}
+
+.option-item {
+    margin: 5px 0;
+}
+
+#feedback {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+/* feedback color states */
+#feedback.correct {
+    background-color: #c8e6c9;
+    /* Light green */
+}
+
+#feedback.incorrect {
+    background-color: #ffcdd2;
+    /* Light red */
+}
+
+#feedback.partial {
+    background-color: #fff9c4;
+    /* Light yellow */
+}
+
+#next-btn,
+#check-btn {
+    margin-right: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ========== THEME STYLES ========== */
+.dark-mode {
+    background-color: #222;
+    color: #eee;
+}
+
+.dark-mode .feedback.correct {
+    background-color: #2e7d32;
+    color: #fff;
+}
+
+.dark-mode .feedback.incorrect {
+    background-color: #c62828;
+    color: #fff;
+}
+
+.dark-mode .feedback.partial {
+    background-color: #fbc02d;
+    color: #000;
+}
+
+/* ========== LAYOUT MIMIC ========== */
+#quiz-layout {
+    border: 1px solid #ccc;
+    margin-top: 20px;
+    padding: 20px;
+}
+#quiz-layout[data-mode="answer"] #submit-answer-button,
+#quiz-layout[data-mode="question"] #next-question-btn,
+#quiz-layout[data-mode="question"] #feedback {
+    display: none;
+}
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navigation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.score-container {
+    text-align: center;
+    margin: 20px 0;
+}

@@ -3,7 +3,6 @@ This is a demo file to try this tool.
 Click Ok to install.
 
 ## What is the answser to the following formula ? 
-
 ```
 = 2+2
 ```

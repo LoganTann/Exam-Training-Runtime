@@ -3,330 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <title>Quiz Exam Runtime</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module">
+    import {registerComponents} from "./modules/components/index.mjs";
+    registerComponents();
+  </script>
 </head>
 <body>
   <header>
     <h1>Quiz Exam Runtime</h1>
   </header>
 
-  <main class="quiz-container">
+  <main id="App" class="quiz-container" data-section="launcher">
     <section id="launcher">
-      
-      <button id="launch" class="">Next Question</button>
+      <button id="launch-button">Start</button>
     </section>
 
     <!-- The container for everything quiz-related -->
-    <section class="quiz-layout" id="quiz-layout">
+    <section id="quiz-layout" data-mode="question">
       <div class="top-row">
-        <div class="timer" id="timer">Time: 00:00</div>
-        <div>Questions remaining: <span id="questions-remaining"></span></div>
+        <c-timer id="timer">Time: 00:00</c-timer>
+        <c-questions-remaining id="questions-remaining" current="0" total="0"></c-questions-remaining>
       </div>
 
       <div id="question-container">
         <div class="question" id="question-text"></div>
         <div class="options" id="options-container"></div>
-        <div class="feedback" id="feedback"></div>
+        <div id="feedback"></div>
       </div>
 
       <div class="navigation-row">
-        <button id="check-btn">Check Answer</button>
-        <button id="next-btn" class="hidden">Next Question</button>
+        <button id="submit-answer-button" type="button">Check Answer</button>
+        <button id="next-question-btn" type="button">Next Question</button>
       </div>
     </section>
 
     <section class="score-container hidden" id="score-container">
       <h2>Your final score:</h2>
       <div id="score-percent"></div>
+      
+      <button id="restart-button" type="button">Try again</button>
     </section>
   </main>
 
   <footer>
-    <p style="text-align: center; margin: 20px 0;">Platform made by: Veljko Vuckovic @wljkov, Logan Tann</p>
   </footer>
 
-  <script type="module">
-    /******************************************************
-     * 1) CONFIGURATION & QUESTION DATA (inlined)
-     ******************************************************/
-    const config = {
-      // total time in seconds
-      totalTime: 90,
-      // how many questions to pick
-      questionsToPick: 5
-    };
+  <script type="module" src="index.mjs"></script>
+</body>
 
-    const questionPool = [
-      {
-        question: "Driving in ______ weather is dangerous due to lack of visibility.",
-        options: ["freezing", "foggy", "shiny", "rainy"],
-        correctAnswers: [1],
-        type: "single"
-      },
-      {
-        question: "Which of the following are fruit?",
-        options: ["Carrot", "Apple", "Broccoli", "Strawberry", "Lemon"],
-        correctAnswers: [1, 3, 4],
-        type: "multiple"
-      },
-      {
-        question: "2 + 2 = ?",
-        options: ["3", "4", "5", "6"],
-        correctAnswers: [1],
-        type: "single"
-      },
-      {
-        question: "Select all prime numbers:",
-        options: ["2", "3", "4", "8", "11"],
-        correctAnswers: [0, 1, 4],
-        type: "multiple"
-      },
-      {
-        question: "What color is the sky on a clear day?",
-        options: ["Blue", "Green", "Yellow", "Red"],
-        correctAnswers: [0],
-        type: "single"
-      },
-      // add more questions if you want ...
-    ];
-
-  /******************************************************
-   * 2) GLOBAL STATE
-   ******************************************************/
-   let selectedQuestions = [];
-  let currentIndex = 0;
-  let userScore = 0; // partial scores for multiple-choice
-  let timerInterval = null;
-  let timeRemaining = 0;
-
-  /******************************************************
-   * 3) DOM ELEMENTS
-   ******************************************************/
-  const timerEl              = document.getElementById('timer');
-  const questionTextEl       = document.getElementById('question-text');
-  const optionsContainerEl   = document.getElementById('options-container');
-  const feedbackEl           = document.getElementById('feedback');
-  const nextBtn              = document.getElementById('next-btn');
-  const checkBtn             = document.getElementById('check-btn');
-  const scoreContainerEl     = document.getElementById('score-container');
-  const scorePercentEl       = document.getElementById('score-percent');
-  const questionsRemainingEl = document.getElementById('questions-remaining');
-
-  /******************************************************
-   * 4) INIT QUIZ
-   ******************************************************/
-  window.addEventListener('DOMContentLoaded', () => {
-    initQuiz();
-  });
-
-  function initQuiz() {
-    // Shuffle and pick N questions
-    const shuffled = questionPool.sort(() => Math.random() - 0.5);
-    selectedQuestions = shuffled.slice(0, config.questionsToPick);
-
-    // Reset state
-    currentIndex = 0;
-    userScore = 0;
-    timeRemaining = config.totalTime;
-    feedbackEl.style.display = 'none';
-    nextBtn.classList.add('hidden');
-    checkBtn.classList.remove('hidden');
-    scoreContainerEl.classList.add('hidden');
-    document.getElementById('quiz-layout').style.display = 'block';
-
-    // Start timer
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(updateTimer, 1000);
-
-    // Render first question
-    renderQuestion();
-  }
-
-  /******************************************************
-   * 5) HELPER: FORMAT TEXT FOR HTML
-   ******************************************************/
-  function formatTextForHTML(str) {
-    // 1) Escape < and > so they're shown as text
-    let safe = str
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // 2) Replace code blocks: ``` some code ```
-    safe = safe.replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>');
-
-    // 3) Convert newlines to <br/>
-    safe = safe.replace(/\n/g, '<br/>');
-
-    return safe;
-  }
-
-  /******************************************************
-   * 6) RENDER QUESTION
-   ******************************************************/
-  function renderQuestion() {
-    const q = selectedQuestions[currentIndex];
-
-    // Use formatTextForHTML for the question
-    questionTextEl.innerHTML = formatTextForHTML(q.question);
-
-    optionsContainerEl.innerHTML = '';
-    feedbackEl.textContent = '';
-    feedbackEl.style.display = 'none';
-    feedbackEl.className = 'feedback'; // reset classes
-
-    // Single-choice => radio, multiple => checkbox
-    const inputType = (q.type === 'single') ? 'radio' : 'checkbox';
-
-    // === RANDOMIZE ANSWERS BY SHUFFLING THE OPTIONS ===
-    const shuffledOptions = q.options
-      .map((optionText, originalIndex) => ({ 
-        text: optionText, 
-        index: originalIndex 
-      }))
-      .sort(() => Math.random() - 0.5);
-
-    // Now loop over the shuffled list to build UI
-    shuffledOptions.forEach(({ text, index }) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'option-item';
-
-      const input = document.createElement('input');
-      input.type = inputType;
-      input.name = 'quizOption_' + currentIndex; // group name
-      // IMPORTANT: set the value to the *original* index
-      input.value = index; 
-
-      // Use the same function for options so code blocks appear properly
-      const label = document.createElement('label');
-      label.innerHTML = formatTextForHTML(text);
-
-      wrapper.appendChild(input);
-      wrapper.appendChild(label);
-      optionsContainerEl.appendChild(wrapper);
-    });
-
-    // Update "questions remaining"
-    questionsRemainingEl.textContent = (selectedQuestions.length - currentIndex);
-  }
-
-  /******************************************************
-   * 7) CHECK ANSWER
-   ******************************************************/
-  checkBtn.addEventListener('click', () => {
-    const q = selectedQuestions[currentIndex];
-    const inputs = [...optionsContainerEl.querySelectorAll('input')];
-    
-    // Indices that the user checked
-    const checkedIndices = inputs
-      .filter(inp => inp.checked)
-      .map(inp => parseInt(inp.value));
-
-    // Evaluate correctness
-    const correctSet = new Set(q.correctAnswers);
-    const userSet = new Set(checkedIndices);
-
-    // If user selected any *incorrect* => 0
-    let fraction = 0;
-    for (let val of userSet) {
-      if (!correctSet.has(val)) {
-        fraction = 0;
-        showFeedback('incorrect', q, fraction);
-        userScore += 0;
-        return;
-      }
-    }
-
-    // If user didn't pick anything wrong but missed some correct => partial
-    fraction = userSet.size / correctSet.size;
-    if (fraction === 1) {
-      showFeedback('correct', q, fraction);
-    } else if (fraction > 0) {
-      showFeedback('partial', q, fraction);
-    } else {
-      showFeedback('incorrect', q, fraction);
-    }
-    userScore += fraction;
-  });
-
-  /******************************************************
-   * 8) SHOW FEEDBACK
-   ******************************************************/
-  function showFeedback(status, question, fraction) {
-    feedbackEl.style.display = 'block';
-
-    // For the "correct answers" portion, we might just show them as text:
-    const escapeHTML = (str) =>
-      str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    // Build correct answer string
-    const correctAnswersText = question.correctAnswers
-      .map(idx => escapeHTML(question.options[idx]))
-      .join(', ');
-
-    if (status === 'correct') {
-      feedbackEl.classList.add('correct');
-      feedbackEl.innerHTML = 'Correct!';
-    } else if (status === 'partial') {
-      feedbackEl.classList.add('partial');
-      const percent = (fraction * 100).toFixed(0);
-      feedbackEl.innerHTML = `Partially correct (${percent}%).<br/>
-        Correct answers: ${correctAnswersText}`;
-    } else {
-      feedbackEl.classList.add('incorrect');
-      feedbackEl.innerHTML = `Incorrect!<br/>
-        Correct answers: ${correctAnswersText}`;
-    }
-
-    // Hide check button, show next
-    checkBtn.classList.add('hidden');
-    nextBtn.classList.remove('hidden');
-  }
-
-  /******************************************************
-   * 9) NEXT QUESTION
-   ******************************************************/
-  nextBtn.addEventListener('click', () => {
-    currentIndex++;
-    if (currentIndex >= selectedQuestions.length) {
-      endQuiz();
-      return;
-    }
-    nextBtn.classList.add('hidden');
-    checkBtn.classList.remove('hidden');
-    renderQuestion();
-  });
-
-  /******************************************************
-   * 10) END QUIZ
-   ******************************************************/
-  function endQuiz() {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    document.getElementById('quiz-layout').style.display = 'none';
-
-    // Convert userScore to a final percentage
-    const finalScore = (userScore / selectedQuestions.length) * 100;
-    scorePercentEl.textContent = finalScore.toFixed(2) + '%';
-    scoreContainerEl.classList.remove('hidden');
-  }
-
-  /******************************************************
-   * 11) TIMER
-   ******************************************************/
-  function updateTimer() {
-    if (timeRemaining <= 0) {
-      endQuiz();
-      return;
-    }
-    timeRemaining--;
-    let minutes = Math.floor(timeRemaining / 60);
-    let seconds = timeRemaining % 60;
-    if (seconds < 10) seconds = '0' + seconds;
-    timerEl.textContent = `Time: ${minutes}:${seconds}`;
-  }
-
-    /*
-    
-    MIT License
+<!--
+MIT License
 
 Copyright (c) 2025 Veljko Vuckovic (refloow.com)
 
@@ -347,110 +74,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-    */
-    
-  </script>
-  
-  <style>
-    /* ========== BASIC STYLES ========== */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    header, .quiz-container, footer {
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    button {
-      cursor: pointer;
-      padding: 8px 16px;
-      margin: 6px 0;
-    }
-    .question {
-      font-weight: bold;
-      margin-top: 20px;
-    }
-    .options {
-      margin: 10px 0;
-    }
-    .option-item {
-      margin: 5px 0;
-    }
-    .feedback {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-      padding: 10px;
-      display: none;
-    }
-    /* feedback color states */
-    .feedback.correct {
-      background-color: #c8e6c9; /* Light green */
-    }
-    .feedback.incorrect {
-      background-color: #ffcdd2; /* Light red */
-    }
-    .feedback.partial {
-      background-color: #fff9c4; /* Light yellow */
-    }
-    #next-btn, #check-btn {
-      margin-right: 10px;
-    }
-    .hidden {
-      display: none;
-    }
-
-    /* ========== THEME STYLES ========== */
-    .dark-mode {
-      background-color: #222;
-      color: #eee;
-    }
-    .dark-mode .feedback.correct {
-      background-color: #2e7d32;
-      color: #fff;
-    }
-    .dark-mode .feedback.incorrect {
-      background-color: #c62828;
-      color: #fff;
-    }
-    .dark-mode .feedback.partial {
-      background-color: #fbc02d;
-      color: #000;
-    }
-
-    /* ========== LAYOUT MIMIC ========== */
-    .quiz-layout {
-      border: 1px solid #ccc;
-      margin-top: 20px;
-      padding: 20px;
-    }
-    .top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .timer {
-      font-weight: bold;
-    }
-    .navigation-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-    }
-    .score-container {
-      text-align: center;
-      margin: 20px 0;
-    }
-  </style>
-</body>
+-->
 </html>

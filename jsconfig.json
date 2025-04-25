@@ -1,0 +1,12 @@
+{
+  "include": [
+    "docs/**/*.mjs",
+    "docs/**/*.html",
+    "docs/**/*.js"
+  ],
+  "compilerOptions": {
+    "target": "ES2023",
+    "checkJs": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  }
+}
