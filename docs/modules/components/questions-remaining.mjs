@@ -2,13 +2,12 @@ export default class QuestionsRemainingComponent extends HTMLElement {
     static register() {
         customElements.define("c-questions-remaining", QuestionsRemainingComponent);
     }
-    /**
-     * @param {string} id 
-     * @returns {QuestionsRemainingComponent}
-     */
     static find(id) {
         const found = document.getElementById(id);
-        return (found instanceof QuestionsRemainingComponent) ? found : null;
+        if (found instanceof QuestionsRemainingComponent) {
+            return found;
+        }
+        throw new Error(`Err: #${id} should be a QuestionsRemainingComponent instance`);
     }
 
     render() {
@@ -17,10 +16,23 @@ export default class QuestionsRemainingComponent extends HTMLElement {
         `;
     }
 
-    current = 0;
-    total = 0;
+    get current() {
+        const asNumber = Number(this.getAttribute("current"));
+        return Number.isFinite(asNumber) && asNumber > 0 ? asNumber : 0;
+    }
+    set current(value) {
+        this.setAttribute("current", String(value));
+    }
+    get total() {
+        const asNumber = Number(this.getAttribute("total"));
+        return Number.isFinite(asNumber) && asNumber > 0 ? asNumber : 0;
+    }
+    set total(value) {
+        this.setAttribute("total", String(value));
+    }
+    
     get remaining() {
-        const result = Number(this.total) - Number(this.current);
+        const result = this.total - this.current;
         return Math.max(0, result);
     }
 

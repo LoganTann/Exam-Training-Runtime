@@ -2,13 +2,12 @@ export default class TimerComponent extends HTMLElement {
     static register() {
         customElements.define("c-timer", TimerComponent);
     }
-    /**
-     * @param {string} id 
-     * @returns {TimerComponent}
-     */
     static find(id) {
         const found = document.getElementById(id);
-        return (found instanceof TimerComponent) ? found : null;
+        if (found instanceof TimerComponent) {
+            return found;
+        }
+        throw new Error(`Err: #${id} should be a TimerComponent instance`);
     }
 
     render() {

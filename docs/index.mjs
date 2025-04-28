@@ -1,14 +1,24 @@
+import InputFileComponent from "./modules/components/input-file.mjs";
 import QuestionsRemainingComponent from "./modules/components/questions-remaining.mjs";
 import TimerComponent from "./modules/components/timer.mjs";
 import { parseFileContent } from "./modules/parser.mjs";
+import { HeadlessTab } from "./modules/tabUtils.mjs";
 import DemoSyntaxExample from "./questionPools/Demo -- Syntax Example.mjs";
 
 const elements = {
     App: document.getElementById("App"),
+
+    launcherLoadDemoBtn: document.getElementById("load-demo-file"),
+    launcherFileInput: InputFileComponent.find("question-pool-input"),
+    /** @type {HTMLFormElement} */
+    launcherSettingsForm: document.querySelector("form#launcher-form"),
+    /** @type {HTMLInputElement} */
+    launcherQuestionsToPick: document.querySelector("input#questionsToPick"),
+
     quizLayout: document.getElementById("quiz-layout"),
     timerCmp: TimerComponent.find("timer"),
     questionsRemainingEl: QuestionsRemainingComponent.find("questions-remaining"),
-    launchButton: document.getElementById("launch-button"),
+    
 
     questionTextEl: document.getElementById("question-text"),
     optionsContainerEl: document.getElementById("options-container"),
@@ -39,12 +49,47 @@ const globals = {
     },
 };
 
+// App Load 
 window.addEventListener("DOMContentLoaded", () => {
-    console.log(globals.questionPool.questions);
+    HeadlessTab.init();
 });
 
-elements.launchButton.addEventListener("click", () => {
-    startQuiz(globals.questionPool.questions);
+// File selection
+elements.launcherLoadDemoBtn.addEventListener("click", () => {
+    globals.questionPool = parseFileContent(DemoSyntaxExample);
+    HeadlessTab.setTab("#launcher", 'launcher-form');
+    elements.launcherQuestionsToPick.value = String(globals.questionPool.questions.length || -1);
+    elements.launcherQuestionsToPick.max = String(globals.questionPool.questions.length || -1);
+});
+elements.launcherFileInput.addEventListener("file-uploaded", async() => {
+    try {
+        const fileContent = await elements.launcherFileInput.getFileContent();
+        globals.questionPool = parseFileContent(fileContent);
+        HeadlessTab.setTab("#launcher", 'launcher-form');
+    } catch(e) {
+        if (e?.message) {
+            alert(e.message);
+        } else {
+            throw e;
+        }
+    }
+});
+
+// Quiz settings
+elements.launcherSettingsForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(elements.launcherSettingsForm);
+    globals.config.totalTime = Number(formData.get("totalTime")) * 60;
+    globals.config.questionsToPick = Number(formData.get("questionsToPick"));
+    globals.config.shuffle = Boolean(formData.get("shuffle"));
+    try {
+        startQuiz(globals.questionPool.questions);
+    } catch (e) {
+        if (e && e.message) {
+            alert(e.message);
+        }
+        throw e;
+    }
 });
 
 function startQuiz(questionPool) {
@@ -56,6 +101,9 @@ function startQuiz(questionPool) {
     }
     if (globals.config.totalTime > 0) {
         elements.timerCmp.start(globals.config.totalTime);
+        elements.timerCmp.classList.remove("hidden");
+    } else {
+        elements.timerCmp.classList.add("hidden");
     }
     if (globals.config.questionsToPick > 0) {
         globals.quizState.selectedQuestions = globals.quizState.selectedQuestions.slice(0, globals.config.questionsToPick);
@@ -63,7 +111,7 @@ function startQuiz(questionPool) {
     elements.questionsRemainingEl.reset(globals.quizState.selectedQuestions.length);
 
     // Launch multiple-choice question view and render the first question
-    elements.App.dataset.section = "quiz-layout";
+    HeadlessTab.setTab("#App", "question");
     renderQuestion();
 }
 
@@ -176,16 +224,18 @@ elements.nextBtn.addEventListener("click", () => {
     renderQuestion();
 });
 
-elements.restartBtn.addEventListener("click", () => {
-    elements.App.dataset.section = "launcher";
-});
+// @ts-ignore
+window.restart = () => {
+    elements.timerCmp.stop();
+    HeadlessTab.setTab("#App", "launcher");
+    HeadlessTab.setTab("#launcher", "launcher-form");
+};
 
 function endQuiz() {
-    elements.App.dataset.section = "score-container";
+    HeadlessTab.setTab("#App", "score-container");
     elements.timerCmp.stop();
 
     // Convert state.userScore to a final percentage
     const finalScore = (globals.quizState.userScore / globals.quizState.selectedQuestions.length) * 100;
     elements.scorePercentEl.textContent = finalScore.toFixed(2) + "%";
-    elements.scoreContainerEl.classList.remove("hidden");
 }

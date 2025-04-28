@@ -1,18 +1,24 @@
 /* ========== BASIC STYLES ========== */
-body {
+html, body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    transition: background-color 0.3s, color 0.3s;
+    height: 100%;
+}
+main {
+    flex-grow: 1;
+    
+    --color-light-green: #c8e6c9;
+    --color-light-red: #ffcdd2;
+    --color-light-yellow: #fff9c4;
+    --color-light-blue: hsl(207, 79%, 65%);
+    --color-dark: #222245;
 }
 
-section {
-    display: none;
-}
-[data-section="launcher"] #launcher,
-[data-section="quiz-layout"] #quiz-layout,
-[data-section="score-container"] #score-container {
-    display: block;
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 header,
@@ -55,21 +61,14 @@ button {
     margin-top: 10px;
     padding: 10px;
 }
-
-/* feedback color states */
 #feedback.correct {
-    background-color: #c8e6c9;
-    /* Light green */
+    background-color: var(--color-light-green);
 }
-
 #feedback.incorrect {
-    background-color: #ffcdd2;
-    /* Light red */
+    background-color: var(--color-light-red);
 }
-
 #feedback.partial {
-    background-color: #fff9c4;
-    /* Light yellow */
+    background-color: var(--color-light-yellow);
 }
 
 #next-btn,
@@ -79,27 +78,6 @@ button {
 
 .hidden {
     display: none;
-}
-
-/* ========== THEME STYLES ========== */
-.dark-mode {
-    background-color: #222;
-    color: #eee;
-}
-
-.dark-mode .feedback.correct {
-    background-color: #2e7d32;
-    color: #fff;
-}
-
-.dark-mode .feedback.incorrect {
-    background-color: #c62828;
-    color: #fff;
-}
-
-.dark-mode .feedback.partial {
-    background-color: #fbc02d;
-    color: #000;
 }
 
 /* ========== LAYOUT MIMIC ========== */
@@ -130,4 +108,29 @@ button {
 .score-container {
     text-align: center;
     margin: 20px 0;
+}
+
+.checkbox-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 20px;
+    border: 2px dashed var(--color-dark);
+    cursor: pointer;
+    border-radius: 8px;
+    user-select: none;
+}
+.checkbox-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+.checkbox-card input[type="checkbox"] {
+    display: none;
+}
+.checkbox-card c-checkbox-icon {
+    width: 40px;
+    height: 40px;
+    fill: #ddd;
+}
+.checkbox-card input[type="checkbox"]:checked + c-checkbox-icon {
+    fill: var(--color-light-blue);
 }
