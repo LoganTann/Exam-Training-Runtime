@@ -124,14 +124,14 @@ function startQuiz(questionPool) {
 function renderQuestion() {
     elements.quizLayout.dataset.mode = "question";
     /** @type {import("./modules/parser.mjs").CompiledQuestion} */
-    const q = globals.quizState.selectedQuestions[globals.quizState.currentIndex];
+    const question = globals.quizState.selectedQuestions[globals.quizState.currentIndex];
 
-    elements.questionTextEl.innerHTML = q.question;
+    elements.questionTextEl.innerHTML = question.question;
     elements.optionsContainerEl.innerHTML = "";
 
-    const inputType = q.type === "single" ? "radio" : "checkbox";
+    const inputType = question.type === "single" ? "radio" : "checkbox";
 
-    let options = q.options.map((optionText, originalIndex) => ({
+    let options = question.options.map((optionText, originalIndex) => ({
         text: optionText,
         index: originalIndex,
     }));
@@ -144,6 +144,7 @@ function renderQuestion() {
         const id = `quizCheckbox_${index}`;    
         const name = `quizOption_${globals.quizState.currentIndex}`;
         const value = String(index);
+        const explanation = question.comments.at(index) || "";
         const item = document.createElement("div");
         item.innerHTML = `
             <label class="checkbox-card" for="${id}">
@@ -151,6 +152,7 @@ function renderQuestion() {
                 <c-checkbox-icon></c-checkbox-icon>
                 <div>
                     ${text}
+                    <div class="hide-on-question explanation">${explanation}</div>
                 </div>
             </label>
         `;

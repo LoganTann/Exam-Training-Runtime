@@ -82,9 +82,8 @@ button {
     margin-top: 20px;
     padding: 20px;
 }
-#quiz-layout[data-mode="answer"] #submit-answer-button,
-#quiz-layout[data-mode="question"] #next-question-btn,
-#quiz-layout[data-mode="question"] #feedback {
+#quiz-layout[data-mode="answer"] .hide-on-answer,
+#quiz-layout[data-mode="question"] .hide-on-question {
     display: none;
 }
 
@@ -129,4 +128,10 @@ button {
 }
 .checkbox-card input:checked + c-checkbox-icon {
     fill: var(--color-light-blue);
+}
+
+.explanation {
+    color: gray;
+    font-size: 0.8em;
+    margin-top: 0.3rem;
 }
