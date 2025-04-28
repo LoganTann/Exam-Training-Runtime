@@ -199,10 +199,7 @@ elements.checkBtn.addEventListener("click", () => {
 
 function showFeedback(status, question, fraction) {
     elements.quizLayout.dataset.mode = "answer";
-
-    // Build correct answer string
-    const correctAnswersText = question.correctAnswers.join(", ");
-
+    const correctAnswersText = question.correctAnswers.map((idx) => question.options[idx]).join("<br> ");
     if (status === "correct") {
         elements.feedbackEl.dataset.status = "correct";
         elements.feedbackEl.innerHTML = "Correct!";
@@ -212,7 +209,7 @@ function showFeedback(status, question, fraction) {
         elements.feedbackEl.innerHTML = `Partially correct (${percent}%).<br/> Correct answers: ${correctAnswersText}`;
     } else {
         elements.feedbackEl.dataset.status = "incorrect";
-        elements.feedbackEl.innerHTML = `Incorrect!<br/>Correct answers: ${correctAnswersText}`;
+        elements.feedbackEl.innerHTML = `Incorrect!<br/>Correct answers: <br>${correctAnswersText}`;
     }
 }
 
