@@ -1,6 +1,6 @@
 This is a demo file to try this tool.
 
-Click Ok to install.
+Click Start to launch.
 
 ## What is the answser to the following formula ? 
 ```

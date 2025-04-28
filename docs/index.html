@@ -24,6 +24,7 @@
       </div>
 
       <form data-tab-id="launcher-form" action="#!launch" id="launcher-form" class="stack">
+        <blockquote id="launcher-file-meta"></blockquote>
         <div>
           <label for="totalTime">Timer in minutes (-1 = disabled)</label>
           <br>
@@ -46,13 +47,13 @@
           <input type="number" id="questionsToPick" name="questionsToPick" value="-1" min="-1" required>
         </div>
         <label class="checkbox-card" for="shuffle">
-          <input slot="input" type="checkbox" id="shuffle" name="shuffle" checked>
+          <input type="checkbox" id="shuffle" name="shuffle" checked>
           <c-checkbox-icon></c-checkbox-icon>
           <div>
             Shuffle options
           </div>
         </label>
-        <div>
+        <div style="text-align: center;">
           <button type="submit" id="launch-button">Start</button>
         </div>
       </form>
@@ -67,7 +68,7 @@
 
       <div id="question-container">
         <div class="question" id="question-text"></div>
-        <div class="options" id="options-container"></div>
+        <div class="options stack" id="options-container"></div>
         <div id="feedback"></div>
       </div>
 

@@ -6,6 +6,9 @@ export function parseFileContent(template) {
     const questions = [];
     /** @type {QuestionBuilder | null} */
     let currentQuestion = null;
+    if (lines.length == 1) {
+        throw new Error("Invalid file. Please provide a valid question pool file.");
+    }
     for (const line of lines) {
         if (line.startsWith("##")) {
             if (currentQuestion) {
@@ -15,6 +18,9 @@ export function parseFileContent(template) {
             continue;
         }
         if (!currentQuestion) {
+            if (header.length > 30 || line.length > 500) {
+                throw new Error("File exceeds limits. Is it a valid question pool file ? Header should not exceed 30 lines and 500 cols.");
+            }
             header.push(line.trim());
             continue;
         }
@@ -33,6 +39,9 @@ export function parseFileContent(template) {
     // Push last question if it exists
     if (currentQuestion) {
         questions.push(currentQuestion.toObject);
+    }
+    if (questions.length == 0) {
+        throw new Error("Invalid file. Please provide a valid question pool file.");
     }
     return {
         header: marked.parse(header.join("\n")),

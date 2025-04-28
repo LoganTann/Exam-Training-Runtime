@@ -14,6 +14,7 @@ const elements = {
     launcherSettingsForm: document.querySelector("form#launcher-form"),
     /** @type {HTMLInputElement} */
     launcherQuestionsToPick: document.querySelector("input#questionsToPick"),
+    launcherBlockquote: document.getElementById("launcher-file-meta"),
 
     quizLayout: document.getElementById("quiz-layout"),
     timerCmp: TimerComponent.find("timer"),
@@ -57,15 +58,13 @@ window.addEventListener("DOMContentLoaded", () => {
 // File selection
 elements.launcherLoadDemoBtn.addEventListener("click", () => {
     globals.questionPool = parseFileContent(DemoSyntaxExample);
-    HeadlessTab.setTab("#launcher", 'launcher-form');
-    elements.launcherQuestionsToPick.value = String(globals.questionPool.questions.length || -1);
-    elements.launcherQuestionsToPick.max = String(globals.questionPool.questions.length || -1);
+    openLauncherForm();
 });
 elements.launcherFileInput.addEventListener("file-uploaded", async() => {
     try {
         const fileContent = await elements.launcherFileInput.getFileContent();
         globals.questionPool = parseFileContent(fileContent);
-        HeadlessTab.setTab("#launcher", 'launcher-form');
+        openLauncherForm();
     } catch(e) {
         if (e?.message) {
             alert(e.message);
@@ -74,6 +73,13 @@ elements.launcherFileInput.addEventListener("file-uploaded", async() => {
         }
     }
 });
+
+function openLauncherForm() {
+    elements.launcherQuestionsToPick.value = String(globals.questionPool.questions.length || -1);
+    elements.launcherQuestionsToPick.max = String(globals.questionPool.questions.length || -1);
+    elements.launcherBlockquote.innerHTML = globals.questionPool.header;
+    HeadlessTab.setTab("#launcher", 'launcher-form');
+}
 
 // Quiz settings
 elements.launcherSettingsForm.addEventListener("submit", async (event) => {
@@ -134,23 +140,21 @@ function renderQuestion() {
     }
 
     // Now loop over the shuffled list to build UI
-    options.forEach(({ text, index }) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "option-item";
-
-        const input = document.createElement("input");
-        input.type = inputType;
-        input.name = "quizOption_" + globals.quizState.currentIndex; // group name
-        // IMPORTANT: set the value to the *original* index
-        input.value = String(index);
-
-        // Use the same function for options so code blocks appear properly
-        const label = document.createElement("label");
-        label.innerHTML = text;
-
-        wrapper.appendChild(input);
-        wrapper.appendChild(label);
-        elements.optionsContainerEl.appendChild(wrapper);
+    options.forEach(({ text, index }) => {    
+        const id = `quizCheckbox_${index}`;    
+        const name = `quizOption_${globals.quizState.currentIndex}`;
+        const value = String(index);
+        const item = document.createElement("div");
+        item.innerHTML = `
+            <label class="checkbox-card" for="${id}">
+                <input type="${inputType}" id="${id}" name="${name}" value="${value}">
+                <c-checkbox-icon></c-checkbox-icon>
+                <div>
+                    ${text}
+                </div>
+            </label>
+        `;
+        elements.optionsContainerEl.appendChild(item);
     });
 
     // Update "questions remaining"
@@ -194,24 +198,19 @@ elements.checkBtn.addEventListener("click", () => {
 function showFeedback(status, question, fraction) {
     elements.quizLayout.dataset.mode = "answer";
 
-    // For the "correct answers" portion, we might just show them as text:
-    const escapeHTML = (str) => str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
     // Build correct answer string
-    const correctAnswersText = question.correctAnswers.map((idx) => escapeHTML(question.options[idx])).join(", ");
+    const correctAnswersText = question.correctAnswers.join(", ");
 
     if (status === "correct") {
-        elements.feedbackEl.classList.add("correct");
+        elements.feedbackEl.dataset.status = "correct";
         elements.feedbackEl.innerHTML = "Correct!";
     } else if (status === "partial") {
-        elements.feedbackEl.classList.add("partial");
+        elements.feedbackEl.dataset.status = "partial";
         const percent = (fraction * 100).toFixed(0);
-        elements.feedbackEl.innerHTML = `Partially correct (${percent}%).<br/>
-      Correct answers: ${correctAnswersText}`;
+        elements.feedbackEl.innerHTML = `Partially correct (${percent}%).<br/> Correct answers: ${correctAnswersText}`;
     } else {
-        elements.feedbackEl.classList.add("incorrect");
-        elements.feedbackEl.innerHTML = `Incorrect!<br/>
-      Correct answers: ${correctAnswersText}`;
+        elements.feedbackEl.dataset.status = "incorrect";
+        elements.feedbackEl.innerHTML = `Incorrect!<br/>Correct answers: ${correctAnswersText}`;
     }
 }
 
